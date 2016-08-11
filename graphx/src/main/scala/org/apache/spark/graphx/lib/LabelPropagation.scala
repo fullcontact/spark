@@ -46,21 +46,21 @@ object LabelPropagation {
     require(maxSteps > 0, s"Maximum of steps must be greater than 0, but got ${maxSteps}")
 
     val lpaGraph = graph.mapVertices { case (vid, _) => vid }
-    def sendMessage(e: EdgeTriplet[VertexId, ED]): Iterator[(VertexId, Map[VertexId, Long])] = {
+    def sendMessage(e: EdgeTriplet[VertexId, ED]): Iterator[(VertexId, Map[VertexId, VertexId])] = {
       Iterator((e.srcId, Map(e.dstAttr -> 1L)), (e.dstId, Map(e.srcAttr -> 1L)))
     }
-    def mergeMessage(count1: Map[VertexId, Long], count2: Map[VertexId, Long])
-      : Map[VertexId, Long] = {
+    def mergeMessage(count1: Map[VertexId, VertexId], count2: Map[VertexId, VertexId])
+      : Map[VertexId, VertexId] = {
       (count1.keySet ++ count2.keySet).map { i =>
-        val count1Val = count1.getOrElse(i, 0L)
-        val count2Val = count2.getOrElse(i, 0L)
-        i -> (count1Val + count2Val)
+        val count1Val = count1.getOrElse(i, new VertexId(0L, 0L))
+        val count2Val = count2.getOrElse(i, new VertexId(0L, 0L))
+        i -> VertexId(count1Val.lo + count2Val.lo, count1Val.hi + count2Val.hi)
       }.toMap
     }
-    def vertexProgram(vid: VertexId, attr: Long, message: Map[VertexId, Long]): VertexId = {
+    def vertexProgram(vid: VertexId, attr: VertexId, message: Map[VertexId, VertexId]): VertexId = {
       if (message.isEmpty) attr else message.maxBy(_._2)._1
     }
-    val initialMessage = Map[VertexId, Long]()
+    val initialMessage = Map[VertexId, VertexId]()
     Pregel(lpaGraph, initialMessage, maxIterations = maxSteps)(
       vprog = vertexProgram,
       sendMsg = sendMessage,

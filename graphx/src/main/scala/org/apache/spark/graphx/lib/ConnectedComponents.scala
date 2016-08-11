@@ -49,12 +49,15 @@ object ConnectedComponents {
         Iterator.empty
       }
     }
-    val initialMessage = Long.MaxValue
+
+    import scala.math.Ordering.Implicits._
+
+    val initialMessage = new VertexId(Long.MaxValue, Long.MaxValue)
     val pregelGraph = Pregel(ccGraph, initialMessage,
       maxIterations, EdgeDirection.Either)(
-      vprog = (id, attr, msg) => math.min(attr, msg),
+      vprog = (id, attr, msg) => attr min msg,
       sendMsg = sendMessage,
-      mergeMsg = (a, b) => math.min(a, b))
+      mergeMsg = (a, b) => a min b)
     ccGraph.unpersist()
     pregelGraph
   } // end of connectedComponents

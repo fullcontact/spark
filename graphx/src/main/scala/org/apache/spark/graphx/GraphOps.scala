@@ -300,14 +300,19 @@ class GraphOps[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]) extends Seriali
    */
   def convertToCanonicalEdges(
       mergeFunc: (ED, ED) => ED = (e1, e2) => e1): Graph[VD, ED] = {
+    val ordering: Ordering[VertexId] = implicitly[Ordering[VertexId]]
+    case class EdgeId(srcId: VertexId, dstId: VertexId)
     val newEdges =
       graph.edges
-        .map {
-          case e if e.srcId < e.dstId => ((e.srcId, e.dstId), e.attr)
-          case e => ((e.dstId, e.srcId), e.attr)
-        }
+        .map[(EdgeId, ED)](e => {
+          if (ordering.lt(e.srcId, e.dstId)) {
+            (EdgeId(e.srcId, e.dstId), e.attr)
+          } else {
+            (EdgeId(e.dstId, e.srcId), e.attr)
+          }
+        })
         .reduceByKey(mergeFunc)
-        .map(e => new Edge(e._1._1, e._1._2, e._2))
+        .map(e => new Edge(e._1.srcId, e._1.dstId, e._2))
     Graph(graph.vertices, newEdges)
   }
 

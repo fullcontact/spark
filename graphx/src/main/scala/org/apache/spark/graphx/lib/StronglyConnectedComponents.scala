@@ -71,11 +71,13 @@ object StronglyConnectedComponents {
 
       sccWorkGraph = sccWorkGraph.mapVertices{ case (vid, (color, isFinal)) => (vid, isFinal) }
 
+      import scala.math.Ordering.Implicits._
+
       // collect min of all my neighbor's scc values, update if it's smaller than mine
       // then notify any neighbors with scc values larger than mine
       sccWorkGraph = Pregel[(VertexId, Boolean), ED, VertexId](
         sccWorkGraph, Long.MaxValue, activeDirection = EdgeDirection.Out)(
-        (vid, myScc, neighborScc) => (math.min(myScc._1, neighborScc), myScc._2),
+        (vid, myScc, neighborScc) => (myScc._1 min neighborScc, myScc._2),
         e => {
           if (e.srcAttr._1 < e.dstAttr._1) {
             Iterator((e.dstId, e.srcAttr._1))
@@ -83,7 +85,7 @@ object StronglyConnectedComponents {
             Iterator()
           }
         },
-        (vid1, vid2) => math.min(vid1, vid2))
+        (vid1, vid2) => vid1 min vid2)
 
       // start at root of SCCs. Traverse values in reverse, notify all my neighbors
       // do not propagate if colors do not match!
