@@ -72,7 +72,7 @@ object PartitionStrategy {
    * maintaining the same size per block.
    */
   case object EdgePartition2D extends PartitionStrategy {
-    override def getPartition(src: VertexId, dst: VertexId, numParts: PartitionID): PartitionID = {
+    override def getPartition(src: VertexId, dst: VertexId, numParts: PartitionID): PartitionID = ??? /*{
       val ceilSqrtNumParts: PartitionID = math.ceil(math.sqrt(numParts)).toInt
       val mixingPrime: VertexId = 1125899906842597L
       if (numParts == ceilSqrtNumParts * ceilSqrtNumParts) {
@@ -91,7 +91,7 @@ object PartitionStrategy {
         col * rows + row
 
       }
-    }
+    } */
   }
 
   /**
@@ -99,10 +99,10 @@ object PartitionStrategy {
    * source.
    */
   case object EdgePartition1D extends PartitionStrategy {
-    override def getPartition(src: VertexId, dst: VertexId, numParts: PartitionID): PartitionID = {
+    override def getPartition(src: VertexId, dst: VertexId, numParts: PartitionID): PartitionID = ??? /*{
       val mixingPrime: VertexId = 1125899906842597L
       (math.abs(src * mixingPrime) % numParts).toInt
-    }
+    } */
   }
 
 

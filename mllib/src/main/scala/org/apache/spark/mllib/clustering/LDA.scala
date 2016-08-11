@@ -411,7 +411,7 @@ private[clustering] object LDA {
   /** Term vertex IDs are {-1, -2, ..., -vocabSize} */
   private[clustering] def term2index(term: Int): Long = -(1 + term.toLong)
 
-  private[clustering] def index2term(termIndex: Long): Int = -(1 + termIndex).toInt
+  private[clustering] def index2term(termIndex: VertexId): Int = -(1 + termIndex.lo).toInt
 
   private[clustering] def isDocumentVertex(v: (VertexId, _)): Boolean = v._1 >= 0
 

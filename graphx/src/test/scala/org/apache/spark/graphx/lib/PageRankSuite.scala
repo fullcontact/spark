@@ -23,35 +23,35 @@ import org.apache.spark.graphx.util.GraphGenerators
 
 
 object GridPageRank {
-  def apply(nRows: Int, nCols: Int, nIter: Int, resetProb: Double): Seq[(VertexId, Double)] = {
-    val inNbrs = Array.fill(nRows * nCols)(collection.mutable.MutableList.empty[Int])
-    val outDegree = Array.fill(nRows * nCols)(0)
-    // Convert row column address into vertex ids (row major order)
-    def sub2ind(r: Int, c: Int): Int = r * nCols + c
-    // Make the grid graph
-    for (r <- 0 until nRows; c <- 0 until nCols) {
-      val ind = sub2ind(r, c)
-      if (r + 1 < nRows) {
-        outDegree(ind) += 1
-        inNbrs(sub2ind(r + 1, c)) += ind
-      }
-      if (c + 1 < nCols) {
-        outDegree(ind) += 1
-        inNbrs(sub2ind(r, c + 1)) += ind
-      }
-    }
-    // compute the pagerank
-    var pr = Array.fill(nRows * nCols)(resetProb)
-    for (iter <- 0 until nIter) {
-      val oldPr = pr
-      pr = new Array[Double](nRows * nCols)
-      for (ind <- 0 until (nRows * nCols)) {
-        pr(ind) = resetProb + (1.0 - resetProb) *
-          inNbrs(ind).map( nbr => oldPr(nbr) / outDegree(nbr)).sum
-      }
-    }
-    (0L until (nRows * nCols)).zip(pr)
-  }
+//  def apply(nRows: Int, nCols: Int, nIter: Int, resetProb: Double): Seq[(VertexId, Double)] = {
+//    val inNbrs = Array.fill(nRows * nCols)(collection.mutable.MutableList.empty[Int])
+//    val outDegree = Array.fill(nRows * nCols)(0)
+//    // Convert row column address into vertex ids (row major order)
+//    def sub2ind(r: Int, c: Int): Int = r * nCols + c
+//    // Make the grid graph
+//    for (r <- 0 until nRows; c <- 0 until nCols) {
+//      val ind = sub2ind(r, c)
+//      if (r + 1 < nRows) {
+//        outDegree(ind) += 1
+//        inNbrs(sub2ind(r + 1, c)) += ind
+//      }
+//      if (c + 1 < nCols) {
+//        outDegree(ind) += 1
+//        inNbrs(sub2ind(r, c + 1)) += ind
+//      }
+//    }
+//    // compute the pagerank
+//    var pr = Array.fill(nRows * nCols)(resetProb)
+//    for (iter <- 0 until nIter) {
+//      val oldPr = pr
+//      pr = new Array[Double](nRows * nCols)
+//      for (ind <- 0 until (nRows * nCols)) {
+//        pr(ind) = resetProb + (1.0 - resetProb) *
+//          inNbrs(ind).map( nbr => oldPr(nbr) / outDegree(nbr)).sum
+//      }
+//    }
+//    (0L until (nRows * nCols)).zip(pr)
+//  }
 
 }
 
@@ -126,57 +126,57 @@ class PageRankSuite extends SparkFunSuite with LocalSparkContext {
     }
   } // end of test Star PersonalPageRank
 
-  test("Grid PageRank") {
-    withSpark { sc =>
-      val rows = 10
-      val cols = 10
-      val resetProb = 0.15
-      val tol = 0.0001
-      val numIter = 50
-      val errorTol = 1.0e-5
-      val gridGraph = GraphGenerators.gridGraph(sc, rows, cols).cache()
+//  test("Grid PageRank") {
+//    withSpark { sc =>
+//      val rows = 10
+//      val cols = 10
+//      val resetProb = 0.15
+//      val tol = 0.0001
+//      val numIter = 50
+//      val errorTol = 1.0e-5
+//      val gridGraph = GraphGenerators.gridGraph(sc, rows, cols).cache()
+//
+//      val staticRanks = gridGraph.staticPageRank(numIter, resetProb).vertices.cache()
+//      val dynamicRanks = gridGraph.pageRank(tol, resetProb).vertices.cache()
+//      val referenceRanks = VertexRDD(
+//        sc.parallelize(GridPageRank(rows, cols, numIter, resetProb))).cache()
+//
+//      assert(compareRanks(staticRanks, referenceRanks) < errorTol)
+//      assert(compareRanks(dynamicRanks, referenceRanks) < errorTol)
+//    }
+//  } // end of Grid PageRank
+//
+//  test("Chain PageRank") {
+//    withSpark { sc =>
+//      val chain1 = (0 until 9).map(x => (x, x + 1))
+//      val rawEdges = sc.parallelize(chain1, 1).map { case (s, d) => (s.toLong, d.toLong) }
+//      val chain = Graph.fromEdgeTuples(rawEdges, 1.0).cache()
+//      val resetProb = 0.15
+//      val tol = 0.0001
+//      val numIter = 10
+//      val errorTol = 1.0e-5
+//
+//      val staticRanks = chain.staticPageRank(numIter, resetProb).vertices
+//      val dynamicRanks = chain.pageRank(tol, resetProb).vertices
+//
+//      assert(compareRanks(staticRanks, dynamicRanks) < errorTol)
+//    }
+//  }
 
-      val staticRanks = gridGraph.staticPageRank(numIter, resetProb).vertices.cache()
-      val dynamicRanks = gridGraph.pageRank(tol, resetProb).vertices.cache()
-      val referenceRanks = VertexRDD(
-        sc.parallelize(GridPageRank(rows, cols, numIter, resetProb))).cache()
-
-      assert(compareRanks(staticRanks, referenceRanks) < errorTol)
-      assert(compareRanks(dynamicRanks, referenceRanks) < errorTol)
-    }
-  } // end of Grid PageRank
-
-  test("Chain PageRank") {
-    withSpark { sc =>
-      val chain1 = (0 until 9).map(x => (x, x + 1))
-      val rawEdges = sc.parallelize(chain1, 1).map { case (s, d) => (s.toLong, d.toLong) }
-      val chain = Graph.fromEdgeTuples(rawEdges, 1.0).cache()
-      val resetProb = 0.15
-      val tol = 0.0001
-      val numIter = 10
-      val errorTol = 1.0e-5
-
-      val staticRanks = chain.staticPageRank(numIter, resetProb).vertices
-      val dynamicRanks = chain.pageRank(tol, resetProb).vertices
-
-      assert(compareRanks(staticRanks, dynamicRanks) < errorTol)
-    }
-  }
-
-  test("Chain PersonalizedPageRank") {
-    withSpark { sc =>
-      val chain1 = (0 until 9).map(x => (x, x + 1) )
-      val rawEdges = sc.parallelize(chain1, 1).map { case (s, d) => (s.toLong, d.toLong) }
-      val chain = Graph.fromEdgeTuples(rawEdges, 1.0).cache()
-      val resetProb = 0.15
-      val tol = 0.0001
-      val numIter = 10
-      val errorTol = 1.0e-1
-
-      val staticRanks = chain.staticPersonalizedPageRank(4, numIter, resetProb).vertices
-      val dynamicRanks = chain.personalizedPageRank(4, tol, resetProb).vertices
-
-      assert(compareRanks(staticRanks, dynamicRanks) < errorTol)
-    }
-  }
+//  test("Chain PersonalizedPageRank") {
+//    withSpark { sc =>
+//      val chain1 = (0 until 9).map(x => (x, x + 1) )
+//      val rawEdges = sc.parallelize(chain1, 1).map { case (s, d) => (s.toLong, d.toLong) }
+//      val chain = Graph.fromEdgeTuples(rawEdges, 1.0).cache()
+//      val resetProb = 0.15
+//      val tol = 0.0001
+//      val numIter = 10
+//      val errorTol = 1.0e-1
+//
+//      val staticRanks = chain.staticPersonalizedPageRank(4, numIter, resetProb).vertices
+//      val dynamicRanks = chain.personalizedPageRank(4, tol, resetProb).vertices
+//
+//      assert(compareRanks(staticRanks, dynamicRanks) < errorTol)
+//    }
+//  }
 }

@@ -55,7 +55,7 @@ object GraphGenerators extends Logging {
    */
   def logNormalGraph(
       sc: SparkContext, numVertices: Int, numEParts: Int = 0, mu: Double = 4.0,
-      sigma: Double = 1.3, seed: Long = -1): Graph[Long, Int] = {
+      sigma: Double = 1.3, seed: Long = -1): Graph[Long, Int] = ??? /*{
 
     val evalNumEParts = if (numEParts == 0) sc.defaultParallelism else numEParts
 
@@ -73,7 +73,7 @@ object GraphGenerators extends Logging {
     }
 
     Graph(vertices, edges, 0)
-  }
+  }*/
 
   // Right now it just generates a bunch of edges where
   // the edge data is the weight (default 1)

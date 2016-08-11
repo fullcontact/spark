@@ -594,7 +594,7 @@ class DistributedLDAModel private[clustering] (
         for ((termId, n_wk) <- termVertices) {
           var topic = 0
           while (topic < numTopics) {
-            queues(topic) += (n_wk(topic) / N_k(topic) -> index2term(termId.toInt))
+            queues(topic) += (n_wk(topic) / N_k(topic) -> index2term(termId.lo.toInt))
             topic += 1
           }
         }
@@ -629,7 +629,7 @@ class DistributedLDAModel private[clustering] (
         for ((docId, docTopics) <- docVertices) {
           var topic = 0
           while (topic < numTopics) {
-            queues(topic) += (docTopics(topic) -> docId)
+            queues(topic) += (docTopics(topic) -> docId.lo)
             topic += 1
           }
         }
@@ -654,7 +654,7 @@ class DistributedLDAModel private[clustering] (
    *         the document.
    */
   @Since("1.5.0")
-  lazy val topicAssignments: RDD[(Long, Array[Int], Array[Int])] = {
+  lazy val topicAssignments: RDD[(VertexId, Array[Int], Array[Int])] = {
     // For reference, compare the below code with the core part of EMLDAOptimizer.next().
     val eta = topicConcentration
     val W = vocabSize
@@ -677,7 +677,7 @@ class DistributedLDAModel private[clustering] (
     // M-STEP: Aggregation computes new N_{kj}, N_{wk} counts.
     val perDocAssignments =
       graph.aggregateMessages[(Array[Int], Array[Int])](sendMsg, mergeMsg).filter(isDocumentVertex)
-    perDocAssignments.map { case (docID: Long, (terms: Array[Int], topics: Array[Int])) =>
+    perDocAssignments.map { case (docID: VertexId, (terms: Array[Int], topics: Array[Int])) =>
       // TODO: Avoid zip, which is inefficient.
       val (sortedTerms, sortedTopics) = terms.zip(topics).sortBy(_._1).unzip
       (docID, sortedTerms.toArray, sortedTopics.toArray)
@@ -763,9 +763,9 @@ class DistributedLDAModel private[clustering] (
    * @return  RDD of (document ID, topic distribution) pairs
    */
   @Since("1.3.0")
-  def topicDistributions: RDD[(Long, Vector)] = {
+  def topicDistributions: RDD[(VertexId, Vector)] = {
     graph.vertices.filter(LDA.isDocumentVertex).map { case (docID, topicCounts) =>
-      (docID.toLong, Vectors.fromBreeze(normalize(topicCounts, 1.0)))
+      (docID, Vectors.fromBreeze(normalize(topicCounts, 1.0)))
     }
   }
 
@@ -782,7 +782,7 @@ class DistributedLDAModel private[clustering] (
    * @return RDD of (doc ID, topic indices, topic weights)
    */
   @Since("1.5.0")
-  def topTopicsPerDocument(k: Int): RDD[(Long, Array[Int], Array[Double])] = {
+  def topTopicsPerDocument(k: Int): RDD[(VertexId, Array[Int], Array[Double])] = {
     graph.vertices.filter(LDA.isDocumentVertex).map { case (docID, topicCounts) =>
       val topIndices = argtopk(topicCounts, k)
       val sumCounts = sum(topicCounts)
@@ -791,7 +791,7 @@ class DistributedLDAModel private[clustering] (
       } else {
         topicCounts(topIndices)
       }
-      (docID.toLong, topIndices.toArray, weights.toArray)
+      (docID, topIndices.toArray, weights.toArray)
     }
   }
 
@@ -844,10 +844,10 @@ object DistributedLDAModel extends Loader[DistributedLDAModel] {
     case class Data(globalTopicTotals: Vector)
 
     // Store each term and document vertex with an id and the topicWeights.
-    case class VertexData(id: Long, topicWeights: Vector)
+    case class VertexData(id: VertexId, topicWeights: Vector)
 
     // Store each edge with the source id, destination id and tokenCounts.
-    case class EdgeData(srcId: Long, dstId: Long, tokenCounts: Double)
+    case class EdgeData(srcId: VertexId, dstId: VertexId, tokenCounts: Double)
 
     def save(
         sc: SparkContext,
@@ -907,7 +907,7 @@ object DistributedLDAModel extends Loader[DistributedLDAModel] {
       val globalTopicTotals: LDA.TopicCounts =
         dataFrame.first().getAs[Vector](0).asBreeze.toDenseVector
       val vertices: RDD[(VertexId, LDA.TopicCounts)] = vertexDataFrame.rdd.map {
-        case Row(ind: Long, vec: Vector) => (ind, vec.asBreeze.toDenseVector)
+        case Row(ind: Long, vec: Vector) => (VertexId(ind, 0), vec.asBreeze.toDenseVector)
       }
 
       val edges: RDD[Edge[LDA.TokenCount]] = edgeDataFrame.rdd.map {

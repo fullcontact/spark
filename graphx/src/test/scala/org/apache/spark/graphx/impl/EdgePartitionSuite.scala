@@ -32,28 +32,28 @@ class EdgePartitionSuite extends SparkFunSuite {
     builder.toEdgePartition
   }
 
-  test("reverse") {
-    val edges = List(Edge(0, 1, 0), Edge(1, 2, 0), Edge(2, 0, 0))
-    val reversedEdges = List(Edge(0, 2, 0), Edge(1, 0, 0), Edge(2, 1, 0))
-    val builder = new EdgePartitionBuilder[Int, Nothing]
-    for (e <- edges) {
-      builder.add(e.srcId, e.dstId, e.attr)
-    }
-    val edgePartition = builder.toEdgePartition
-    assert(edgePartition.reverse.iterator.map(_.copy()).toList === reversedEdges)
-    assert(edgePartition.reverse.reverse.iterator.map(_.copy()).toList === edges)
-  }
-
-  test("map") {
-    val edges = List(Edge(0, 1, 0), Edge(1, 2, 0), Edge(2, 0, 0))
-    val builder = new EdgePartitionBuilder[Int, Nothing]
-    for (e <- edges) {
-      builder.add(e.srcId, e.dstId, e.attr)
-    }
-    val edgePartition = builder.toEdgePartition
-    assert(edgePartition.map(e => e.srcId + e.dstId).iterator.map(_.copy()).toList ===
-      edges.map(e => e.copy(attr = e.srcId + e.dstId)))
-  }
+//  test("reverse") {
+//    val edges = List(Edge(0, 1, 0), Edge(1, 2, 0), Edge(2, 0, 0))
+//    val reversedEdges = List(Edge(0, 2, 0), Edge(1, 0, 0), Edge(2, 1, 0))
+//    val builder = new EdgePartitionBuilder[Int, Nothing]
+//    for (e <- edges) {
+//      builder.add(e.srcId, e.dstId, e.attr)
+//    }
+//    val edgePartition = builder.toEdgePartition
+//    assert(edgePartition.reverse.iterator.map(_.copy()).toList === reversedEdges)
+//    assert(edgePartition.reverse.reverse.iterator.map(_.copy()).toList === edges)
+//  }
+//
+//  test("map") {
+//    val edges = List(Edge(0, 1, 0), Edge(1, 2, 0), Edge(2, 0, 0))
+//    val builder = new EdgePartitionBuilder[Int, Nothing]
+//    for (e <- edges) {
+//      builder.add(e.srcId, e.dstId, e.attr)
+//    }
+//    val edgePartition = builder.toEdgePartition
+//    assert(edgePartition.map(e => e.srcId + e.dstId).iterator.map(_.copy()).toList ===
+//      edges.map(e => e.copy(attr = e.srcId + e.dstId)))
+//  }
 
   test("filter") {
     val edges = List(Edge(0, 1, 0), Edge(0, 2, 0), Edge(2, 0, 0))

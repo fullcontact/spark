@@ -245,7 +245,7 @@ object PowerIterationClustering extends Logging {
    * @param cluster assigned cluster id
    */
   @Since("1.3.0")
-  case class Assignment(id: Long, cluster: Int)
+  case class Assignment(id: VertexId, cluster: Int)
 
   /**
    * Normalizes the affinity graph (A) and returns the normalized affinity matrix (W).
