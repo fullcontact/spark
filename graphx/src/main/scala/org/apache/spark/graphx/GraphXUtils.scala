@@ -32,6 +32,7 @@ object GraphXUtils {
    */
   def registerKryoClasses(conf: SparkConf) {
     conf.registerKryoClasses(Array(
+      classOf[VertexId],
       classOf[Edge[Object]],
       classOf[(VertexId, Object)],
       classOf[EdgePartition[Object, Object]],
