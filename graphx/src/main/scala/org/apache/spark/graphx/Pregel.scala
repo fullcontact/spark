@@ -18,8 +18,8 @@
 package org.apache.spark.graphx
 
 import scala.reflect.ClassTag
-
 import org.apache.spark.internal.Logging
+import org.apache.spark.storage.StorageLevel
 
 /**
  * Implements a Pregel-like bulk-synchronous message-passing API.
@@ -113,7 +113,8 @@ object Pregel extends Logging {
      (graph: Graph[VD, ED],
       initialMsg: A,
       maxIterations: Int = Int.MaxValue,
-      activeDirection: EdgeDirection = EdgeDirection.Either)
+      activeDirection: EdgeDirection = EdgeDirection.Either,
+      storageLevel: StorageLevel = StorageLevel.MEMORY_ONLY)
      (vprog: (VertexId, VD, A) => VD,
       sendMsg: EdgeTriplet[VD, ED] => Iterator[(VertexId, A)],
       mergeMsg: (A, A) => A)
@@ -122,7 +123,8 @@ object Pregel extends Logging {
     require(maxIterations > 0, s"Maximum number of iterations must be greater than 0," +
       s" but got ${maxIterations}")
 
-    var g = graph.mapVertices((vid, vdata) => vprog(vid, vdata, initialMsg)).cache()
+    var g = graph.mapVertices((vid, vdata) => vprog(vid, vdata, initialMsg))
+      .persist(storageLevel)
     // compute the messages
     var messages = GraphXUtils.mapReduceTriplets(g, sendMsg, mergeMsg)
     var activeMessages = messages.count()
@@ -132,14 +134,15 @@ object Pregel extends Logging {
     while (activeMessages > 0 && i < maxIterations) {
       // Receive the messages and update the vertices.
       prevG = g
-      g = g.joinVertices(messages)(vprog).cache()
+      g = g.joinVertices(messages)(vprog).persist(storageLevel)
 
       val oldMessages = messages
       // Send new messages, skipping edges where neither side received a message. We must cache
       // messages so it can be materialized on the next line, allowing us to uncache the previous
       // iteration.
       messages = GraphXUtils.mapReduceTriplets(
-        g, sendMsg, mergeMsg, Some((oldMessages, activeDirection))).cache()
+        g, sendMsg, mergeMsg, Some((oldMessages, activeDirection)))
+        .persist(storageLevel)
       // The call to count() materializes `messages` and the vertices of `g`. This hides oldMessages
       // (depended on by the vertices of g) and the vertices of prevG (depended on by oldMessages
       // and the vertices of g).

@@ -20,6 +20,7 @@ package org.apache.spark.graphx.lib
 import scala.reflect.ClassTag
 
 import org.apache.spark.graphx._
+import org.apache.spark.storage.StorageLevel
 
 /** Connected components algorithm. */
 object ConnectedComponents {
@@ -35,7 +36,9 @@ object ConnectedComponents {
    *         connected component
    */
   def run[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED],
-                                      maxIterations: Int): Graph[VertexId, ED] = {
+                                      maxIterations: Int,
+                                      storageLevel: StorageLevel = StorageLevel.MEMORY_ONLY
+                                     ): Graph[VertexId, ED] = {
     require(maxIterations > 0, s"Maximum of iterations must be greater than 0," +
       s" but got ${maxIterations}")
 
@@ -54,7 +57,7 @@ object ConnectedComponents {
 
     val initialMessage = new VertexId(Long.MaxValue, Long.MaxValue)
     val pregelGraph = Pregel(ccGraph, initialMessage,
-      maxIterations, EdgeDirection.Either)(
+      maxIterations, EdgeDirection.Either, storageLevel = storageLevel)(
       vprog = (id, attr, msg) => attr min msg,
       sendMsg = sendMessage,
       mergeMsg = (a, b) => a min b)
