@@ -18,7 +18,7 @@
 package org.apache.spark.graphx.impl
 
 import org.apache.spark.graphx._
-import org.apache.spark.graphx.util.collection.GraphXPrimitiveKeyOpenHashMap
+import org.apache.spark.graphx.util.collection.GraphXMaybePrimitiveKeyOpenHashMap
 import org.apache.spark.util.collection.{BitSet, PrimitiveVector}
 
 private[graphx]
@@ -47,7 +47,7 @@ object RoutingTablePartition {
     : Iterator[RoutingTableMessage] = {
     // Determine which positions each vertex id appears in using a map where the low 2 bits
     // represent src and dst
-    val map = new GraphXPrimitiveKeyOpenHashMap[VertexId, Byte]
+    val map = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Byte]
     edgePartition.iterator.foreach { e =>
       map.changeValue(e.srcId, 0x1, (b: Byte) => (b | 0x1).toByte)
       map.changeValue(e.dstId, 0x2, (b: Byte) => (b | 0x2).toByte)

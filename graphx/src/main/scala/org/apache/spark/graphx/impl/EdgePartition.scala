@@ -20,7 +20,7 @@ package org.apache.spark.graphx.impl
 import scala.reflect.ClassTag
 
 import org.apache.spark.graphx._
-import org.apache.spark.graphx.util.collection.GraphXPrimitiveKeyOpenHashMap
+import org.apache.spark.graphx.util.collection.GraphXMaybePrimitiveKeyOpenHashMap
 import org.apache.spark.util.collection.BitSet
 
 /**
@@ -57,8 +57,8 @@ class EdgePartition[
     localSrcIds: Array[Int],
     localDstIds: Array[Int],
     data: Array[ED],
-    index: GraphXPrimitiveKeyOpenHashMap[VertexId, Int],
-    global2local: GraphXPrimitiveKeyOpenHashMap[VertexId, Int],
+    index: GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Int],
+    global2local: GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Int],
     local2global: Array[VertexId],
     vertexAttrs: Array[VD],
     activeSet: Option[VertexSet])

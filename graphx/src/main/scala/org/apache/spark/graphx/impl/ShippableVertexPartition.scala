@@ -20,7 +20,7 @@ package org.apache.spark.graphx.impl
 import scala.reflect.ClassTag
 
 import org.apache.spark.graphx._
-import org.apache.spark.graphx.util.collection.GraphXPrimitiveKeyOpenHashMap
+import org.apache.spark.graphx.util.collection.GraphXMaybePrimitiveKeyOpenHashMap
 import org.apache.spark.util.collection.{BitSet, PrimitiveVector}
 
 /** Stores vertex attributes to ship to an edge partition. */
@@ -54,7 +54,7 @@ object ShippableVertexPartition {
   def apply[VD: ClassTag](
       iter: Iterator[(VertexId, VD)], routingTable: RoutingTablePartition, defaultVal: VD,
       mergeFunc: (VD, VD) => VD): ShippableVertexPartition[VD] = {
-    val map = new GraphXPrimitiveKeyOpenHashMap[VertexId, VD]
+    val map = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, VD]
     // Merge the given vertices using mergeFunc
     iter.foreach { pair =>
       map.setMerge(pair._1, pair._2, mergeFunc)

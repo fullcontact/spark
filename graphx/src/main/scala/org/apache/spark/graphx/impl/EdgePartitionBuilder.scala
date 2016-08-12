@@ -20,7 +20,7 @@ package org.apache.spark.graphx.impl
 import scala.reflect.ClassTag
 
 import org.apache.spark.graphx._
-import org.apache.spark.graphx.util.collection.GraphXPrimitiveKeyOpenHashMap
+import org.apache.spark.graphx.util.collection.GraphXMaybePrimitiveKeyOpenHashMap
 import org.apache.spark.util.collection.{PrimitiveVector, SortDataFormat, Sorter}
 
 /** Constructs an EdgePartition from scratch. */
@@ -41,8 +41,8 @@ class EdgePartitionBuilder[@specialized(Long, Int, Double) ED: ClassTag, VD: Cla
     val localSrcIds = new Array[Int](edgeArray.length)
     val localDstIds = new Array[Int](edgeArray.length)
     val data = new Array[ED](edgeArray.length)
-    val index = new GraphXPrimitiveKeyOpenHashMap[VertexId, Int]
-    val global2local = new GraphXPrimitiveKeyOpenHashMap[VertexId, Int]
+    val index = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Int]
+    val global2local = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Int]
     val local2global = new PrimitiveVector[VertexId]
     var vertexAttrs = Array.empty[VD]
     // Copy edges into columnar structures, tracking the beginnings of source vertex id clusters and
@@ -82,11 +82,11 @@ class EdgePartitionBuilder[@specialized(Long, Int, Double) ED: ClassTag, VD: Cla
 private[impl]
 class ExistingEdgePartitionBuilder[
     @specialized(Long, Int, Double) ED: ClassTag, VD: ClassTag](
-    global2local: GraphXPrimitiveKeyOpenHashMap[VertexId, Int],
-    local2global: Array[VertexId],
-    vertexAttrs: Array[VD],
-    activeSet: Option[VertexSet],
-    size: Int = 64) {
+         global2local: GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Int],
+         local2global: Array[VertexId],
+         vertexAttrs: Array[VD],
+         activeSet: Option[VertexSet],
+         size: Int = 64) {
   private[this] val edges = new PrimitiveVector[EdgeWithLocalIds[ED]](size)
 
   /** Add a new edge to the partition. */
@@ -101,7 +101,7 @@ class ExistingEdgePartitionBuilder[
     val localSrcIds = new Array[Int](edgeArray.length)
     val localDstIds = new Array[Int](edgeArray.length)
     val data = new Array[ED](edgeArray.length)
-    val index = new GraphXPrimitiveKeyOpenHashMap[VertexId, Int]
+    val index = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, Int]
     // Copy edges into columnar structures, tracking the beginnings of source vertex id clusters and
     // adding them to the index
     if (edgeArray.length > 0) {

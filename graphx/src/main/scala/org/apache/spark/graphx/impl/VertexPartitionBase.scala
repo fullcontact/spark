@@ -21,7 +21,7 @@ import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 import org.apache.spark.graphx._
-import org.apache.spark.graphx.util.collection.GraphXPrimitiveKeyOpenHashMap
+import org.apache.spark.graphx.util.collection.GraphXMaybePrimitiveKeyOpenHashMap
 import org.apache.spark.util.collection.BitSet
 
 private[graphx] object VertexPartitionBase {
@@ -31,7 +31,7 @@ private[graphx] object VertexPartitionBase {
    */
   def initFrom[VD: ClassTag](iter: Iterator[(VertexId, VD)])
     : (VertexIdToIndexMap, Array[VD], BitSet) = {
-    val map = new GraphXPrimitiveKeyOpenHashMap[VertexId, VD]
+    val map = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, VD]
     iter.foreach { pair =>
       map(pair._1) = pair._2
     }
@@ -44,7 +44,7 @@ private[graphx] object VertexPartitionBase {
    */
   def initFrom[VD: ClassTag](iter: Iterator[(VertexId, VD)], mergeFunc: (VD, VD) => VD)
     : (VertexIdToIndexMap, Array[VD], BitSet) = {
-    val map = new GraphXPrimitiveKeyOpenHashMap[VertexId, VD]
+    val map = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, VD]
     iter.foreach { pair =>
       map.setMerge(pair._1, pair._2, mergeFunc)
     }

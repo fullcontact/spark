@@ -22,7 +22,7 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 import org.apache.spark.graphx._
-import org.apache.spark.graphx.util.collection.GraphXPrimitiveKeyOpenHashMap
+import org.apache.spark.graphx.util.collection.GraphXMaybePrimitiveKeyOpenHashMap
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.collection.BitSet
 
@@ -238,7 +238,7 @@ private[graphx] abstract class VertexPartitionBaseOps
    * Construct a new VertexPartition whose index contains only the vertices in the mask.
    */
   def reindex(): Self[VD] = {
-    val hashMap = new GraphXPrimitiveKeyOpenHashMap[VertexId, VD]
+    val hashMap = new GraphXMaybePrimitiveKeyOpenHashMap[VertexId, VD]
     val arbitraryMerge = (a: VD, b: VD) => a
     for ((k, v) <- self.iterator) {
       hashMap.setMerge(k, v, arbitraryMerge)
